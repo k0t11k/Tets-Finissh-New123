@@ -1,0 +1,15 @@
+{
+  "name": "rvra_icp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "npm run prebuild --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "dev": "npm run dev --workspace frontend"
+  },
+  "workspaces": ["frontend"],
+  "overrides": {
+    "@dfinity/agent": "3.2.2",
+    "@dfinity/auth-client": "3.2.2"
+  }
+}

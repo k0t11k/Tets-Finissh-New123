@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <title>RV.RA-ICP — Tickets on ICP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Font (Inter/Geist-like fallback) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicon (gradient dot) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300f0ff'/><stop offset='1' stop-color='%23d400ff'/></linearGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23g)'/></svg>">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- QR (client-side) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+</head>
+<body>
+  <a class="skip" href="#hero">Skip to content</a>
+
+  <!-- Header -->
+  <header class="wrap header slide-down" role="banner">
+    <div class="brand-wrap">
+      <div class="logo" aria-hidden="true"></div>
+      <h1 class="brand">RV.RA-ICP</h1>
+      <span class="chip" title="Built for the Internet Computer">Internet Computer</span>
+    </div>
+
+    <nav class="nav" role="navigation" aria-label="Primary">
+      <a href="#events" class="nav-link" title="Browse events (G)">Events</a>
+      <a href="#create" class="nav-link" title="Create event (C)">Create</a>
+      <a href="#account" class="nav-link" title="Your tickets (T)">My&nbsp;Tickets</a>
+
+      <!-- Wallet/Theme/AI -->
+      <span id="plug-icp" class="badge" aria-live="polite" title="ICP balance via Plug">ICP: —</span>
+      <button id="theme-btn" class="btn icon" title="Toggle theme (⌘/Ctrl + K)" aria-label="Toggle theme">🌓</button>
+      <button id="ai-btn" class="btn outline" title="AI helper (A)">AI helper</button>
+      <button id="ii-btn" class="btn outline" title="Sign in with Internet Identity">Sign in with II</button>
+      <button id="plug-btn" class="btn outline" title="Connect Plug wallet">Connect Plug</button>
+    </nav>
+  </header>
+
+  <!-- Sub-header / Profile -->
+  <section class="wrap subheader" aria-label="Session status">
+    <div class="status">
+      <span id="auth-status" class="badge">Auth: anonymous</span>
+      <span id="plug-status" class="badge">Plug: checking…</span>
+      <span id="principal" class="mono muted" aria-live="polite"></span>
+    </div>
+
+    <div id="profile" class="profile hidden" aria-live="polite">
+      <canvas id="avatar" width="40" height="40" class="avatar" aria-hidden="true"></canvas>
+      <div class="profile-meta">
+        <div class="profile-title">Your Principal</div>
+        <div id="principal-full" class="profile-text mono" title="Full principal text"></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="wrap" role="main">
+    <!-- Hero -->
+    <section id="hero" class="card hero fade-in" aria-labelledby="hero-title">
+      <div class="hero-left">
+        <h2 id="hero-title">Discover unforgettable events</h2>
+        <p class="muted">Kyiv & beyond. Verifiable on-chain tickets. Non-custodial. Built on ICP.</p>
+        <div class="kbd-row tiny muted">
+          <span><kbd>/</kbd> focus search</span>
+          <span><kbd>G</kbd> events</span>
+          <span><kbd>C</kbd> create</span>
+          <span><kbd>T</kbd> tickets</span>
+          <span><kbd>⌘/Ctrl</kbd> + <kbd>K</kbd> theme</span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="controls" aria-label="Filters">
+        <div class="field">
+          <label for="search">Search</label>
+          <input id="search" type="search" placeholder="Type title or city ( / to focus )" />
+        </div>
+
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="All">All</option>
+            <option>Concert</option><option>Theater</option>
+            <option>Comedy</option><option>Festival</option>
+            <option>Conference</option><option>Exhibition</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" type="date" />
+        </div>
+
+        <div class="field field--button">
+          <label>&nbsp;</label>
+          <button id="refresh" class="btn" title="Reset filters">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Events Grid -->
+    <section id="events" class="grid" aria-label="Events list">
+      <!-- skeletons while content loads -->
+      <div class="card skel" aria-hidden="true"></div>
+      <div class="card skel" aria-hidden="true"></div>
+      <div class="card skel" aria-hidden="true"></div>
+    </section>
+
+    <!-- Create/Edit -->
+    <section id="create" class="card pop-in" aria-label="Create or edit event">
+      <div class="section-head">
+        <h2>Create new event</h2>
+        <div class="row">
+          <label class="switch" title="If enabled, transact ICP with Plug instead of stub">
+            <input id="real-pay" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+          <span class="muted tiny">Enable real ICP transfer via Plug</span>
+        </div>
+      </div>
+
+      <p class="muted small">Anyone can create events (protected by password). Prices in UAH and ICP (e8s auto-calc).</p>
+
+      <div class="grid-form">
+        <div class="field"><label>Title</label><input id="e_title" placeholder="Title" /></div>
+        <div class="field"><label>Date</label><input id="e_date" type="date" /></div>
+        <div class="field"><label>Time</label><input id="e_time" type="time" /></div>
+        <div class="field"><label>City</label><input id="e_city" placeholder="Kyiv" /></div>
+        <div class="field"><label>Category</label><input id="e_category" placeholder="Concert, Theater…" /></div>
+        <div class="field"><label>Venue</label><input id="e_venue" placeholder="Venue" /></div>
+        <div class="field"><label>Image URL</label><input id="e_image" placeholder="https://…" /></div>
+        <div class="field"><label>Price UAH</label><input id="e_price_uah" type="number" min="0" placeholder="0" /></div>
+        <div class="field"><label>Price ICP</label><input id="e_price_icp" type="number" min="0" step="0.00000001" placeholder="0.00000000" /></div>
+      </div>
+
+      <div class="field"><label>Description</label><textarea id="e_desc" rows="3" placeholder="Details"></textarea></div>
+
+      <div class="row actions">
+        <button id="create-btn" class="btn">Create</button>
+        <button id="cancel-edit" class="btn outline hidden">Cancel edit</button>
+      </div>
+      <p class="muted tiny">Only users with password can create. Seeded events are editable by anyone.</p>
+    </section>
+
+    <!-- My Tickets -->
+    <section id="account" class="card rise-up" aria-label="Your tickets">
+      <h2>My Tickets</h2>
+      <p class="muted small">Tickets are bound to your ICP principal (II or Plug). Each ticket carries a QR for verification.</p>
+      <div id="tickets"></div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="wrap foot fade-in" role="contentinfo">
+    <div class="foot-row">
+      <div class="foot-brand">
+        <div class="logo small" aria-hidden="true"></div>
+        <span class="muted">RV.RA-ICP</span>
+      </div>
+      <small class="muted">
+        Built on Internet Computer • Network: <b>IC mainnet</b>
+      </small>
+    </div>
+  </footer>
+
+  <!-- Overlay (processing) -->
+  <div id="overlay" class="overlay" style="display:none" aria-modal="true" role="dialog" aria-label="Processing">
+    <div class="card overlay-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <div id="overlay-text">Processing…</div>
+    </div>
+  </div>
+
+  <!-- Password modal -->
+  <div id="pwd-modal" class="modal" style="display:none" aria-modal="true" role="dialog" aria-labelledby="pwd-title">
+    <div class="modal-card card">
+      <h3 id="pwd-title">Create event — password</h3>
+      <p class="muted tiny">Enter password to create an event.</p>
+      <input id="pwd-input" type="password" class="modal-input" placeholder="Password" />
+      <div class="row right">
+        <button id="pwd-cancel" class="btn outline">Cancel</button>
+        <button id="pwd-ok" class="btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI modal (stub/help) -->
+  <div id="ai-modal" class="modal" style="display:none" aria-modal="true" role="dialog" aria-labelledby="ai-title">
+    <div class="modal-card card">
+      <div class="modal-head">
+        <h3 id="ai-title">AI helper</h3>
+        <button id="ai-close" class="btn icon" aria-label="Close">✕</button>
+      </div>
+      <p class="muted small">
+        Use AI to draft event descriptions, categorize, and auto-fill venue details.  
+        For production, connect your canister/service and call it from <code>main.js</code>.
+      </p>
+      <ul class="muted tiny">
+        <li>Suggest categories &amp; tags based on title</li>
+        <li>Auto-generate short promo blurb</li>
+        <li>Detect duplicates against existing events</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+  <!-- App -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
